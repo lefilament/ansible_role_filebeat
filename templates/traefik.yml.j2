@@ -1,0 +1,11 @@
+# Module: traefik
+
+- module: traefik
+  # Access logs
+  access:
+    enabled: true
+{% if docker_userns_remap %}
+    var.paths: ["/var/lib/docker/{{ dockremap_subuid | default('*') }}.{{ dockremap_subgid | default('*') }}/volumes/inverseproxy_logs/_data/access.log"]
+{% else %}
+    var.paths: ["/var/lib/docker/volumes/inverseproxy_logs/_data/access.log"]
+{% endif %}

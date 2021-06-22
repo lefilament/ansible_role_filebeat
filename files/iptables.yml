@@ -1,0 +1,7 @@
+# Module: iptables
+
+- module: iptables
+  log:
+    enabled: true
+    var.input: file
+    var.paths: ["/var/log/iptables.log"]
