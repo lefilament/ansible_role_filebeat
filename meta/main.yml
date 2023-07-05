@@ -1,18 +1,18 @@
 ---
 galaxy_info:
-  author: Rémi
-  description: This role configures filebeat to push logs to ELK stack
-  company: Le Filament (https://le-filament.com)
-  license: AGPL-3.0-or-later
-  min_ansible_version: 2.1
-  platforms:
-    - name: EL
-      versions:
-        - 7
-    - name: Ubuntu
-      versions:
-        - focal
-  galaxy_tags:
-    - filebeat
-    - log
-    - elk
+    author: lefilament
+    description: This role configures filebeat to push logs to ELK stack
+    company: Le Filament (https://le-filament.com)
+    license: AGPL-3.0-or-later
+    min_ansible_version: "2.1"
+    platforms:
+        - name: EL
+          versions:
+              - "7"
+        - name: Ubuntu
+          versions:
+              - focal
+    galaxy_tags:
+        - filebeat
+        - log
+        - elk

@@ -1,94 +1,102 @@
 ---
 
 - name: Include OS-specific variables.
-  include_vars: "{{ ansible_os_family }}.yml"
+  ansible.builtin.include_vars: "{{ ansible_os_family }}.yml"
 
 # INSTALLATION
 - name: Add Filebeat GPG key to APT
-  apt_key:
-    url: "{{ elastic_gpg_key_url }}"
+  ansible.builtin.get_url:
+      url: "{{ elastic_gpg_key_url }}"
+      dest: /etc/apt/trusted.gpg.d/elastic.asc
+      mode: '0644'
   when: ansible_os_family == "Debian"
 
 - name: Add FileBeat repo to APT repositories
-  apt_repository:
-    repo: deb {{ elastic_packages_url }}/apt stable main
-    update_cache: true
+  ansible.builtin.apt_repository:
+      repo: deb {{ elastic_packages_url }}/apt stable main
+      update_cache: true
   when: ansible_os_family == "Debian"
 
 - name: Add FileBeat repo to YUM repositories
-  yum_repository:
-    file: elastic
-    name: elastic-7.x
-    description: Elastic repository for 7.x packages
-    baseurl: "{{ elastic_packages_url }}/yum"
-    gpgkey: "{{ elastic_gpg_key_url }}"
-    gpgcheck: true
+  ansible.builtin.yum_repository:
+      file: elastic
+      name: elastic-7.x
+      description: Elastic repository for 7.x packages
+      baseurl: "{{ elastic_packages_url }}/yum"
+      gpgkey: "{{ elastic_gpg_key_url }}"
+      gpgcheck: true
   when: ansible_os_family == "RedHat"
 
 - name: Install OS packages
-  package:
-    name: "{{ packages_to_install }}"
-    state: latest
+  ansible.builtin.package:
+      name: "{{ packages_to_install }}"
+      state: latest
   async: 120
   poll: 10
   when: not ansible_check_mode
 
 - name: Check installed OS packages
-  package:
-    name: "{{ packages_to_install }}"
-    state: latest
+  ansible.builtin.package:
+      name: "{{ packages_to_install }}"
+      state: latest
   when: ansible_check_mode
 
-- name: make sure filebeat is enabled if log_collection = true
-  service: name=filebeat enabled=yes state=started
+- name: Make sure filebeat is enabled if log_collection = true
+  ansible.builtin.service:
+      name: filebeat
+      enabled: true
+      state: started
   when: log_collection
 
-- name: make sure filebeat is disabled if log_collection = false
-  service: name=filebeat enabled=no state=stopped
+- name: Make sure filebeat is disabled if log_collection = false
+  ansible.builtin.service:
+      name: filebeat
+      enabled: true
+      state: stopped
   when: not log_collection
 
 # CONFIGURATION (only if log_collection = true)
 - name: Push logstash certificate
-  copy:
-    content: "{{ logstash_tls_crt }}"
-    dest: "/etc/ssl/certs/logstash.crt"
-    owner: root
-    group: root
-    mode: '0644'
+  ansible.builtin.copy:
+      content: "{{ logstash_tls_crt }}"
+      dest: "/etc/ssl/certs/logstash.crt"
+      owner: root
+      group: root
+      mode: '0644'
   when: log_collection
-  notify: restart filebeat
+  notify: Restart filebeat
 
-- name: push Filebeat configuration file
-  template:
-    src: filebeat.yml.j2
-    dest: /etc/filebeat/filebeat.yml
-    owner: root
-    group: root
-    mode: '0600'
+- name: Push Filebeat configuration file
+  ansible.builtin.template:
+      src: filebeat.yml.j2
+      dest: /etc/filebeat/filebeat.yml
+      owner: root
+      group: root
+      mode: '0600'
   when: log_collection
-  notify: restart filebeat
+  notify: Restart filebeat
 
-- name: push Filebeat modules configuration file
-  copy:
-    src: "{{ item }}.yml"
-    dest: /etc/filebeat/modules.d/{{ item }}.yml
-    owner: root
-    group: root
-    mode: '0644'
+- name: Push Filebeat modules configuration file
+  ansible.builtin.copy:
+      src: "{{ item }}.yml"
+      dest: /etc/filebeat/modules.d/{{ item }}.yml
+      owner: root
+      group: root
+      mode: '0644'
   with_items:
-    - iptables
-    - system
+      - iptables
+      - system
   when: log_collection
-  notify: restart filebeat
+  notify: Restart filebeat
 
-- name: push Filebeat traefik module configuration file
-  template:
-    src: "{{ item }}.yml.j2"
-    dest: /etc/filebeat/modules.d/{{ item }}.yml
-    owner: root
-    group: root
-    mode: '0644'
+- name: Push Filebeat traefik module configuration file
+  ansible.builtin.template:
+      src: "{{ item }}.yml.j2"
+      dest: /etc/filebeat/modules.d/{{ item }}.yml
+      owner: root
+      group: root
+      mode: '0644'
   with_items:
-    - traefik
+      - traefik
   when: inventory_hostname in groups.docker and log_collection
-  notify: restart filebeat
+  notify: Restart filebeat

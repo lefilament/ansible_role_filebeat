@@ -4,9 +4,14 @@ filebeat.config.modules:
   reload.enabled: false
 
 # ================================== General ===================================
+logging:
+  level: info
+  to_files: true
+  to_syslog: false
+
 fields_under_root: true
 
-{% if inventory_hostname in groups.docker %}
+{% if inventory_hostname in groups.docker | default([]) %}
 # ================================ AutoDiscover ================================
 filebeat.autodiscover:
   providers:
@@ -20,6 +25,17 @@ filebeat.autodiscover:
 {% endif %}
 
 {% endif %}
+
+filebeat.inputs:
+- type: filestream
+  id: dpkg
+  name: "dpkg"
+  paths:
+    - /var/log/dpkg.log
+  fields:
+     service_type: "dpkg"
+  fields_under_root: true
+
 # ================================== Outputs ===================================
 # ------------------------------ Logstash Output -------------------------------
 output.logstash:
@@ -32,7 +48,7 @@ output.logstash:
   ssl.certificate_authorities:
     - /etc/ssl/certs/logstash.crt
 
-{% if inventory_hostname in groups.docker_elk %}
+{% if inventory_hostname in groups.docker_elk | default([]) %}
 
 # ---------------------------- ElasticSearch Output -----------------------------
   #output.elasticsearch:

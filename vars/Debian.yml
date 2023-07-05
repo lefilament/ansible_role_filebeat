@@ -1,4 +1,4 @@
 ---
 packages_to_install:
-  - apt-transport-https
-  - filebeat
+    - apt-transport-https
+    - filebeat
